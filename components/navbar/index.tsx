@@ -69,7 +69,7 @@ const Navbar = async () => {
   const cta: LinkItem = data.data.navbar.cta;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 flex items-center justify-between lg:px-6 p-4 z-50 bg-white border-b-2 border-black">
+    <nav className="fixed top-0 left-0 right-0 flex items-center justify-between lg:px-6 px-4 py-2 z-50 bg-white border-b-2 border-black">
       <div className="block flex-none md:hidden">
         <MobileMenu navigation={navigation} cta={cta} />
       </div>

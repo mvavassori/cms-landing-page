@@ -70,8 +70,6 @@ export default async function Footer() {
   const data = await loader();
   if (!data) return null;
 
-  console.log(data);
-
   const logo = data.data.footer.logoLink;
   const linkFamilies: LinkFamily[] = data.data.footer.linkFamily;
 
