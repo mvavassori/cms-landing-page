@@ -1,5 +1,3 @@
-import React from "react";
-
 interface HeaderSectionProps {
   data: {
     __component: string;
@@ -7,6 +5,7 @@ interface HeaderSectionProps {
     title?: string;
     subtitle?: string;
     description?: string;
+    styling?: "primary" | "secondary";
   };
 }
 
@@ -14,18 +13,29 @@ export default function HeaderSection({ data }: HeaderSectionProps) {
   const title = data?.title || "";
   const subtitle = data?.subtitle || "";
   const description = data?.description || "";
+  const styling = data?.styling || "primary";
 
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto">
-        <div className="">
+        <div>
           {/* Gradient background with content */}
           <div className="relative rounded-2xl overflow-hidden">
             {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-blue-950 opacity-90"></div>
+            <div
+              className={`absolute inset-0 ${
+                styling === "secondary"
+                  ? "bg-gradient-to-br from-sky-100 to-zinc-400" // lighter gradient for secondary
+                  : "bg-gradient-to-br from-zinc-700 to-blue-950 opacity-90" // primary gradient
+              }`}
+            ></div>
             
             {/* Content */}
-            <div className="relative z-10 p-8 md:p-12 text-white">
+            <div
+              className={`relative z-10 p-8 md:p-12 ${
+                styling === "secondary" ? "text-black" : "text-white"
+              }`}
+            >
               {subtitle && (
                 <p className="text-lg md:text-xl font-medium mb-3">
                   {subtitle}

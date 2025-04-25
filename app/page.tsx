@@ -43,8 +43,7 @@ async function loader() {
   try {
     const response = await fetch(url, {
       method: "GET",
-      headers,
-      cache: "no-store", // Disable caching to always get fresh data
+      headers
     });
 
     if (!response.ok) {
@@ -68,13 +67,15 @@ function renderBlock(block: any) {
     return null;
   }
 
+  const key = `${block.__component}-${block.id}`;
+
   switch (block.__component) {
     case "layout.hero-section":
-      return <HeroSection key={block.__component} data={block} />;
+      return <HeroSection key={key} data={block} />;
     case "layout.header-section":
-      return <HeaderSection key={block.__component} data={block} />;
+      return <HeaderSection key={key} data={block} />;
     case "layout.feature-section":
-      return <FeatureSection key={block.__component} data={block} />;
+      return <FeatureSection key={key} data={block} />;
     default:
       console.warn(`Unknown block type: ${block.__component}`);
       return null;
@@ -92,10 +93,7 @@ export default async function Home() {
     );
   }
 
-  // Get the homePageContent dynamic zone data
   const homePageContent = data.data?.homePageContent || [];
-
-  // console.log("hpc",homePageContent)
 
   // Render the dynamic content
   if (Array.isArray(homePageContent) && homePageContent.length > 0) {
