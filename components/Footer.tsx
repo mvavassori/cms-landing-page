@@ -73,9 +73,6 @@ export default async function Footer() {
   const logo = data.data.footer.logoLink;
   const linkFamilies: LinkFamily[] = data.data.footer.linkFamily;
 
-  console.log(logo);
-  console.log(linkFamilies);
-
   return (
     <footer className="border-t mt-16">
       <div className="max-w-5xl mx-auto px-4 py-8">

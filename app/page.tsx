@@ -1,40 +1,38 @@
-import Link from "next/link";
 import qs from "qs";
-import StrapiImage from "@/components/StrapiImage";
-import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
+import HeaderSection from "@/components/HeaderSection";
+import FeatureSection from "@/components/FeatureSection";
 
-interface CtaItem {
-  id: number;
-  href: string;
-  label: string;
-  isExternal: boolean;
-}
-
+// Function to load data from Strapi
 async function loader() {
-  const path = "/api/home";
+  const path = "/api/home-page";
   const baseUrl = process.env.STRAPI_BASE_URL ?? "http://localhost:1337";
   
-  // Structure the query parameters using qs.stringify
   const query = qs.stringify({
     populate: {
-      hero: {
-        // This will populate the hero section (title, subtitle, image, etc.)
-        populate: {
-          cta: true, // Populate the CTA component
-          image: {
-            fields: ["url", "alternativeText", "name"],
+      homePageContent: {
+        on: {
+          'layout.hero-section': {
+            populate: '*'
           },
-        },
-      },
-      header: true, // Populate the header section (title, subtitle, description)
-      features: {
-        // Populate the features section
-        populate: {
-          featureCard: true, // Populate each feature card inside the features section
-        },
+          'layout.header-section': {
+            populate: '*'
+          },
+          'layout.feature-section': {
+              populate: {
+                featureCard: {
+                  populate: {
+                    media: {
+                      fields: ['url', 'alternativeText', 'name'], // Specify the fields for the media
+                    }
+                  }
+                }
+              }
+            },
+        }
       },
     },
-  }, { encodeValuesOnly: true }); // Ensure values are encoded properly
+  }, { encodeValuesOnly: true });
 
   const url = new URL(path, baseUrl);
   url.search = query; // Attach the query to the URL
@@ -46,11 +44,12 @@ async function loader() {
     const response = await fetch(url, {
       method: "GET",
       headers,
+      cache: "no-store", // Disable caching to always get fresh data
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(errorBody);
+      console.error("Strapi API Error:", errorBody);
       throw new Error(`Response status: ${response.status}`);
     }
 
@@ -58,57 +57,62 @@ async function loader() {
     return data;
   } catch (error) {
     console.error("Error fetching home data:", error);
+    return null;
   }
 }
 
+// Renderer for dynamic zone blocks
+function renderBlock(block: any) {
+  if (!block || !block.__component) {
+    console.warn("Invalid block received:", block);
+    return null;
+  }
+
+  switch (block.__component) {
+    case "layout.hero-section":
+      return <HeroSection key={block.__component} data={block} />;
+    case "layout.header-section":
+      return <HeaderSection key={block.__component} data={block} />;
+    case "layout.feature-section":
+      return <FeatureSection key={block.__component} data={block} />;
+    default:
+      console.warn(`Unknown block type: ${block.__component}`);
+      return null;
+  }
+}
 
 export default async function Home() {
   const data = await loader();
-  if (!data) return null;
-
-  console.log(data)
-  const hero = data.data.hero; // Extract the hero data from the response
-  const { title, subtitle, image } = hero; // Destructure title, subtitle, cta, and image
-
-  const cta: CtaItem[] = data.data.hero.cta
-
-  console.log("cta",cta)
-
-  const backgroundImageUrl = image && image.url ? image.url : ''; // Get the image URL (assuming it's in your Strapi's image field)
-
-  // Render Hero Section with Tailwind
-  return (
-    <div className="relative text-white py-20 px-4 sm:px-6 lg:px-8">
-      {/* Next.js Image for the Background */}
-      {backgroundImageUrl && (
-        <div className="absolute inset-0 z-0">
-          <StrapiImage
-            src={backgroundImageUrl}
-            alt={image.alternativeText}
-            width={1920}
-            height={1080}
-            className="object-cover w-full h-full" // Ensure it covers the section properly
-            priority
-          />
-        </div>
-      )}
-
-      {/* Content on top of the background image */}
-      <div className="relative z-10 max-w-7xl mx-auto text-center">
-        <h1 className="text-4xl font-bold leading-tight sm:text-5xl">{title}</h1>
-        <p className="mt-4 text-xl sm:text-2xl">{subtitle}</p>
-
-        {/* Check if there is a CTA */}
-        {cta && cta.length > 0 && (
-          <div className="mt-8 space-y-4"> {/* Add space between CTAs */}
-            {cta.map((ctaItem, index) => (
-              <Link href={ctaItem.href} target={ctaItem.isExternal ? "_blank" : undefined} key={index}>
-                <Button size={"lg"}>{ctaItem.label}</Button>
-              </Link>
-            ))}
-          </div>
-        )}
+  
+  if (!data) {
+    return (
+      <div className="container mx-auto text-center py-20">
+        <h2 className="text-2xl font-bold text-red-500">Failed to load content</h2>
       </div>
+    );
+  }
+
+  // Get the homePageContent dynamic zone data
+  const homePageContent = data.data?.homePageContent || [];
+
+  // console.log("hpc",homePageContent)
+
+  // Render the dynamic content
+  if (Array.isArray(homePageContent) && homePageContent.length > 0) {
+    return (
+      <>
+        {homePageContent.map((block: any) => renderBlock(block))}
+      </>
+    );
+  }
+
+  // If we get here, we didn't find any content to render
+  return (
+    <div className="container mx-auto text-center py-20">
+      <h2 className="text-2xl font-bold">No content found</h2>
+      <p className="mt-4">
+        Please check your Strapi configuration and ensure you have added content to your Home page.
+      </p>
     </div>
   );
 }
